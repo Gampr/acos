@@ -14,8 +14,7 @@ struct struct_proc {
     char * input;
     size_t count_outp;
     char ** output;
-    
-    
+    char * output_add;
 };
 typedef struct struct_proc proc;
 
@@ -45,7 +44,7 @@ int main(int argc, char ** argv) {
 int parse_proc(proc * cur_proc, char * sproc, char lsep, char rsep) {
     size_t len;
     size_t i_sym;
-    size_t c_proc;
+    size_t c_out;
     size_t pred;
     char prs[2];
     (cur_proc)->input = NULL;
@@ -60,17 +59,23 @@ int parse_proc(proc * cur_proc, char * sproc, char lsep, char rsep) {
             (cur_proc)->count_outp++;
     }
     (cur_proc)->output = (char **)malloc((cur_proc)->count_outp * sizeof(char *));
-    for(i_sym = c_proc = pred = prs[0] = prs[1] = 0; i_sym < len; ++ i_sym) {
+    (cur_proc)->output_add = (char *)malloc((cur_proc)->count_outp * sizeof(char *));
+    for(i_sym = c_out = pred = prs[0] = prs[1] = 0; i_sym < len; ++ i_sym) {
         i_sym += parse_str(&(sproc[i_sym]));
         if(sproc[i_sym] == '>' || sproc[i_sym] == '<') {
             if(sproc[i_sym] == '>' && sproc[i_sym + 1] == '>') {
                 i_sym ++;
                 prs[0] = prs[1] = '>';
+                (cur_proc)->output_add[c_out] = 1;
                 //add flag >>
             }
             else {
                 prs[0] = 0;
                 prs[1] = sproc[i_sym];
+                (cur_proc)->output_add[c_out] = 1;
+            }
+            if(prs[1] == '>') {
+                    
             }
         }
     }
