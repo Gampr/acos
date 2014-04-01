@@ -5,10 +5,21 @@
 #include <errno.h>
 #include "header.h"
 
+/* Allocate memory for your string, read it from FILE * file
+ * If string can't fit in heap, safe_gets cut it into several pieces
+ *
+ * Return values:
+ * ENOMEM - if haven't enough memory(but safe so much so can safe)
+ * ENOENT - if bad reading file
+ * 0 - success
+ * (*str_pointer) == NULL if you can't use new string
+ */
 int safe_gets(FILE *file, char **str_pointer) {
-    size_t size = (size_t)sysconf(_SC_PAGE_SIZE);
+    size_t page_size;
+    size_t size;
     char *ch;
     int sym;
+    size = page_size = (size_t)sysconf(_SC_PAGE_SIZE);
     ch = (*str_pointer) = (char *)malloc(sizeof(char *) * size);
     if(NULL == (*str_pointer))
         return ENOMEM;
@@ -16,22 +27,21 @@ int safe_gets(FILE *file, char **str_pointer) {
         if(EOF == sym) {
             if(!feof(file)) {
                 free(*str_pointer);
-                str_pointer = NULL;
+                (*str_pointer) = NULL;
                 return ENOENT;
             }
             break;
         }
-        if((char *)(str_pointer + (size - 1)) == ch) {
+        if(((*str_pointer) + (size - 1)) == ch) {
             char *tmp;
-            tmp = realloc(*str_pointer, 2*size);
+            tmp = realloc(*str_pointer, sizeof(char *) * (size + page_size));
             if(tmp == NULL) {
                 (*ch) = '\0';
                 return ENOMEM;
             }
-            free(*str_pointer);
             (*str_pointer) = tmp;
-            ch = (char *)(str_pointer + (size - 1));
-            size *= 2;
+            ch = *(str_pointer) + size - 1;
+            size += page_size;
         }
         (*ch) = sym;
         ++ ch;
